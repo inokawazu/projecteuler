@@ -1,9 +1,7 @@
 function solution(input::T) where T
     nmax = (input - 1) ÷ 2
-    oddsquares = ((2n+1)^2 for n in 1:nmax)
-
-    4 * sum(enumerate(oddsquares)) do (n, osq)
-        osq-3n
+    4 * sum(1:nmax) do n
+        4*n^2 + n + 1
     end + 1
 end
 
