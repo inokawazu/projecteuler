@@ -1,23 +1,24 @@
 # In the United Kingdom the currency is made up of pound (£) and pence (p). There are eight coins in general circulation: 1p, 2p, 5p, 10p, 20p, 50p, £1 (100p), and £2 (200p).
 
-function solution(coins, targetvalue::T) where T
-    ways = T[1]
-
-    for value in 1:targetvalue
-        push!(ways, zero(value))
-
-        nways = length(ways)
-        for coin in coins
-            if coin < nways
-                ways[end] += ways[end-coin]
-            end
-        end
+function coinways(usuable_coins, current, target::T, smallestcoin = first(usuable_coins)) where T
+    if current == target
+        return one(T)
     end
 
-    @show ways
-    return ways[end]
+    return sum(usuable_coins) do coin
+        if coin >= smallestcoin && current + coin <= target
+            coinways(usuable_coins, current + coin, target, coin)
+        else
+            zero(T)
+        end
+    end
+end
+
+function solution(coins, target::T) where T
+    coinways(coins, zero(0), target)
 end
 
 const COINS = [1, 2, 5, 10, 20, 50, 100, 200]
-const TARGET = big(10)
-println(solution(COINS, TARGET))
+const TARGET = 200
+println(@time solution(COINS, TARGET))
+println(@time solution(COINS, TARGET))
