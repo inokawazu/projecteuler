@@ -50,3 +50,5 @@ function solution(target = 6)
         end
     end
 end
+
+println(solution())
