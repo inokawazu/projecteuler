@@ -20,3 +20,9 @@ function isprime(n)
     end
     return true
 end
+
+function digs2num(digs::AbstractVector{T}) where T
+    mapreduce(+, digs, zero(T):length(digs)-1) do d, e
+        d * 10^e
+    end
+end
