@@ -1,101 +1,119 @@
 include("common.jl")
 
-function next_prime(n)
-    return first(Iterators.filter(isprime, Iterators.countfrom(n+1)))
-end
-
-function isincreasing(v)
-    return all(Iterators.map(<, v, Iterators.drop(v, 1)))
-end
-
-# [p1, p2, p3]
-
-function solution(target = 5)
-    heulimit = 1_000
-    primes = filter(isprime, 3:heulimit)
-    primestuples = Iterators.product(ntuple(_->primes, target)...)
-    primestuples = Iterators.filter(isincreasing, primestuples)
-
-    for ptuple in primestuples
-        isppgroup = all(Iterators.product(ptuple, ptuple)) do (pt1, pt2)
-            pt1 == pt2 ||
-            isprime(concateprod(pt1, pt2)) &&
-            isprime(concateprod(pt2, pt1))
-        end
-        if isppgroup
-            println(ptuple)
-            return sum(ptuple)
+function find_prime_pairs(n::T) where T
+    output = Tuple{T, T}[]
+    for id in 1:ndigits(n)-1
+        num1, num2 = divrem(n, 10^id)
+        ldnum2 = div(num2, 10^(id-1))
+        if !iszero(ldnum2) && all(isprime, (num1, num2))
+            push!(output, (num1, num2))
         end
     end
 
-    # primes = filter(isprime, 1:heulimit)
-    # prime_set = Set(primes)
-
-    # ppis = Int[1]
-    # while length(ppis) < target
-    #     for cand_ppi in ppis[1]:100_000
-    #         isrightcat = all(
-    #                         ppi->
-    #                         concateprod(primes[ppi], primes[cand_ppi])
-    #                         in prime_set,
-    #                         ppis)
-    #         isleftcat = all(
-    #                         ppi->
-    #                         concateprod(primes[cand_ppi], primes[ppi])
-    #                         in prime_set,
-    #                         ppis)
-    #         if isrightcat && isleftcat
-    #             push!(ppis, cand_ppi)
-    #             @goto nextwhile
-    #         end
-    #     end
-
-    #     @label nextwhile
-    # end
-
-    # stack = [Int[1]]
-    # while !isempty(stack)
-    #     ppis = pop!(stack)
-    #     for cand_ppi in ppis[1]:100_000
-    #         isrightcat = all(
-    #                         ppi->
-    #                         concateprod(primes[ppi], primes[cand_ppi])
-    #                         in prime_set,
-    #                         ppis)
-    #         isleftcat = all(
-    #                         ppi->
-    #                         concateprod(primes[cand_ppi], primes[ppi])
-    #                         in prime_set,
-    #                         ppis)
-    #         if isrightcat && isleftcat
-    #             push!(ppis, cand_ppi)
-    #             break
-    #         end
-    #     end
-    # end
-
-    # starting_primes = Iterators.filter(isprime, Iterators.countfrom(2))
-    # starting_primes = Iterators.takewhile(<=(heulimit), starting_primes)
-
-    # for starting_prime in starting_primes
-    #     nums = Iterators.countfrom(starting_prime) # starting from nums
-    #     primes = Iterators.filter(isprime, nums)
-    #     primes = Iterators.takewhile(<=(heulimit), primes)
-
-    #     pair_primes = Int[]
-    #     for prime in primes
-    #         isrightcat = all(pp->isprime(concateprod(pp, prime)), pair_primes)
-    #         isleftcat = all(pp->isprime(concateprod(prime, pp)), pair_primes)
-    #         if isrightcat && isleftcat
-    #             push!(pair_primes, prime)
-    #             println(pair_primes)
-    #         end
-
-    #         if length(pair_primes) == target
-    #             return sum(pair_primes)
-    #         end
-    #     end
-    # end
+    return output
 end
 
-println(solution(5))
+function solution(target::T = 5) where T
+    nums = Iterators.countfrom(one(T))
+    primes = Iterators.filter(isprime, nums)
+    pp_graph = Dict{T, Set{T}}()
+
+    for prime in primes
+        # if prime > 1_000_000
+        #     foreach(x->println(x, "=>", filter(<=(673), sort(collect(pp_graph[x])))), [3,7,109,673])
+        #     return
+        # end
+
+        for (ppl, ppr) in find_prime_pairs(prime)
+            pp_graph[ppl] = push!(get(pp_graph, ppl, Set{T}()), ppr)
+
+            # length(pp_graph[ppl]) >= target - 1 || continue
+            # pp_set = union(Set(ppl), pp_graph[ppl])
+            # @assert length(pp_set) >= target
+            
+            # return ppl, pp_set
+
+            # all(pp_set) do pp
+            #      pp in keys(pp_graph) && length(pp_graph[pp]) >= target - 1
+            # end || continue
+
+            # intersect_ppset = mapreduce(intersect, pp_set) do opp
+            #     union(Set(opp), pp_graph[opp])
+            # end
+
+            # if Set((3, 7, 673)) ⊆ intersect_ppset
+            #     return intersect_ppset
+            # end
+
+            # if Set((3,7,109,673)) ⊆ pp_set
+            #     return 
+            # end
+
+            # return foreach(collect(pp_set)) do pp
+            #     pp_graph[pp]
+            # end
+
+            # if ppl == 673
+            #     @show 673, pp_set
+            #     foreach(pp_set) do opp
+            #         @show opp, filter(<=(673), pp_graph[opp])
+            #     end
+            # end
+            
+            # intersect_ppset = mapreduce(intersect, pp_set) do opp
+            #     union(Set(opp), pp_graph[opp])
+            # end
+
+            # if length(intersect_ppset) >= target
+            #     println(pp_set)
+            #     for ppn in pp_graph[ppl]
+            #         println(pp_graph[ppn])
+            #     end
+            #     return sum(intersect_ppset)
+            # end
+
+            # all_connected = all(pp_set) do pp
+            #     pp in keys(pp_graph) &&
+            #     ⊆(setdiff(pp_set, pp), pp_graph[pp])
+            # end
+            
+            # alltarget = all(ppl_neighs) do ppl_neigh
+            #     pp_neighbor in keys(pp_graph) &&
+            #     pp in pp_graph[pp_neighbor] &&
+            #     all(other_neighbor -> 
+            #         other_neighbor == pp_neighbor ||
+            #         pp_neighbor in keys(pp_neighbor) &&
+            #         other_neighbor in pp_graph[pp_neighbor], pp_graph[pp])
+            # end
+
+
+            # pp_graph[ppr] = push!(get(pp_graph, ppr, Set{T}()), ppl)
+            # for pp in (ppl, ppr)
+            #     length(pp_graph[pp]) != target - 1 && continue
+
+            #     alltarget = all(pp_graph[pp]) do pp_neighbor
+            #         pp_neighbor in keys(pp_graph) &&
+            #         pp in pp_graph[pp_neighbor] &&
+            #         all(other_neighbor -> 
+            #             other_neighbor == pp_neighbor ||
+            #             pp_neighbor in keys(pp_neighbor) &&
+            #             other_neighbor in pp_graph[pp_neighbor], pp_graph[pp])
+            #     end
+
+            #     if alltarget
+            #         for ppn in pp_graph[pp]
+            #             println(pp_graph[ppn])
+            #         end
+            #         println([pp; collect(pp_graph[pp])])
+            #         return sum(pp_graph[pp]) + pp
+            #     end
+            # end
+        end
+        
+        # mapreduce(intersect, pairs(pp_graph)) do (ppl, ppr_set)
+        #     union(Set(opp), ppr_set)
+        # end
+    end
+end
+
+println(solution(4))
