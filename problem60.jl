@@ -13,106 +13,131 @@ function find_prime_pairs(n::T) where T
     return output
 end
 
+# function get_nconnected_sets(pp, pp_graph, n)
+#     return get_nconnected_sets(Set(pp), pp_graph, n-1)
+# end
+
+function get_nconnected_sets(pp::T, pp_graph, n) where T
+    # if n == 0
+    #     return [pp_set]
+    # end
+
+    output = [Set(pp)]
+    n -= 1
+
+    while n > 0
+        pp_sets = copy(output)
+        empty!(output)
+
+        for pp_set in pp_sets
+            if any(pp->!(pp in keys(pp_graph)), pp_set)
+                continue
+            end
+
+            outwards = mapreduce(pp->pp_graph[pp], union, pp_set)
+            setdiff!(outwards, pp_set)
+
+            for outp in outwards
+                if !(outp in keys(pp_graph))
+                    continue
+                elseif !issubset(pp_set, pp_graph[outp]) 
+                    continue
+                elseif !all(pp->outp in pp_graph[pp], pp_set) 
+                    continue
+                end
+
+                cand_pp_set = union(pp_set, outp)
+                if !any(pps->issetequal(cand_pp_set, pps), output)
+                    push!(output, cand_pp_set)
+                end
+            end
+        end
+
+        n -= 1
+    end
+
+    return output
+
+    # unique(issetequal,
+    # Iterators.flatmap(outwards) do outp
+    #     if !(outp in keys(pp_graph))
+    #         T[]
+    #     elseif !issubset(pp_set, pp_graph[outp]) 
+    #         T[]
+    #     elseif !all(pp->outp in pp_graph[pp], pp_set) 
+    #         T[]
+    #     else
+    #         get_nconnected_sets(union(pp_set, outp), pp_graph, n-1)
+    #     end
+    # end)
+end
+
+# const MAX_REF = Ref(0)
+# function isnconnected(pp, pp_graph, n)
+    # if !(pp in keys(pp_graph))
+    #     return false
+    # end
+
+    # pp_set = Set(pp)
+    # union!(pp_set, pp_graph[pp])
+
+
+    # if (Set(( 3,7,109,673 )) ⊆ pp_set)
+    #     println(pp_set)
+    #     for pp in pp_set
+    #         if pp in keys(pp_graph)
+    #             println(pp, " => ", pp_graph[pp])
+    #         end
+    #     end
+    # end
+
+    # return (Set(( 3,7,109,673 )) ⊆ pp_set)
+
+    # filt_set = filter(pp_set) do opp
+    #     opp_cnt = count(pp_set) do oopp
+    #         opp == oopp ||
+    #         oopp in keys(pp_graph) && opp in pp_graph[oopp]
+    #     end
+    #     opp_cnt > 5
+    # end
+
+    # return length(filt_set) >= n
+
+    # intersect_set = mapreduce(intersect, pp_set) do opp
+    #     opp_set = Set(opp)
+    #     union!(opp_set, get(pp_graph, opp, empty(opp_set)))
+    #     if pp == 673 
+    #         println("DEBUG ", opp_set)
+    #     end
+    #     opp_set
+    # end
+    # return length(intersect_set) == n
+# end
+
 function solution(target::T = 5) where T
     nums = Iterators.countfrom(one(T))
     primes = Iterators.filter(isprime, nums)
     pp_graph = Dict{T, Set{T}}()
 
     for prime in primes
-        # if prime > 1_000_000
-        #     foreach(x->println(x, "=>", filter(<=(673), sort(collect(pp_graph[x])))), [3,7,109,673])
-        #     return
-        # end
+        if prime > 700_000
+            foreach(x->println(x, "=>", filter(<=(673), sort(collect(pp_graph[x])))), [3,7,109,673])
+            # @show isnconnected(673, pp_graph, target)
+            return
+        end
 
         for (ppl, ppr) in find_prime_pairs(prime)
             pp_graph[ppl] = push!(get(pp_graph, ppl, Set{T}()), ppr)
 
-            # length(pp_graph[ppl]) >= target - 1 || continue
-            # pp_set = union(Set(ppl), pp_graph[ppl])
-            # @assert length(pp_set) >= target
-            
-            # return ppl, pp_set
+            ncsets = get_nconnected_sets(ppl, pp_graph, target)
 
-            # all(pp_set) do pp
-            #      pp in keys(pp_graph) && length(pp_graph[pp]) >= target - 1
-            # end || continue
-
-            # intersect_ppset = mapreduce(intersect, pp_set) do opp
-            #     union(Set(opp), pp_graph[opp])
-            # end
-
-            # if Set((3, 7, 673)) ⊆ intersect_ppset
-            #     return intersect_ppset
-            # end
-
-            # if Set((3,7,109,673)) ⊆ pp_set
-            #     return 
-            # end
-
-            # return foreach(collect(pp_set)) do pp
-            #     pp_graph[pp]
-            # end
-
-            # if ppl == 673
-            #     @show 673, pp_set
-            #     foreach(pp_set) do opp
-            #         @show opp, filter(<=(673), pp_graph[opp])
-            #     end
-            # end
-            
-            # intersect_ppset = mapreduce(intersect, pp_set) do opp
-            #     union(Set(opp), pp_graph[opp])
-            # end
-
-            # if length(intersect_ppset) >= target
-            #     println(pp_set)
-            #     for ppn in pp_graph[ppl]
-            #         println(pp_graph[ppn])
-            #     end
-            #     return sum(intersect_ppset)
-            # end
-
-            # all_connected = all(pp_set) do pp
-            #     pp in keys(pp_graph) &&
-            #     ⊆(setdiff(pp_set, pp), pp_graph[pp])
-            # end
-            
-            # alltarget = all(ppl_neighs) do ppl_neigh
-            #     pp_neighbor in keys(pp_graph) &&
-            #     pp in pp_graph[pp_neighbor] &&
-            #     all(other_neighbor -> 
-            #         other_neighbor == pp_neighbor ||
-            #         pp_neighbor in keys(pp_neighbor) &&
-            #         other_neighbor in pp_graph[pp_neighbor], pp_graph[pp])
-            # end
-
-
-            # pp_graph[ppr] = push!(get(pp_graph, ppr, Set{T}()), ppl)
-            # for pp in (ppl, ppr)
-            #     length(pp_graph[pp]) != target - 1 && continue
-
-            #     alltarget = all(pp_graph[pp]) do pp_neighbor
-            #         pp_neighbor in keys(pp_graph) &&
-            #         pp in pp_graph[pp_neighbor] &&
-            #         all(other_neighbor -> 
-            #             other_neighbor == pp_neighbor ||
-            #             pp_neighbor in keys(pp_neighbor) &&
-            #             other_neighbor in pp_graph[pp_neighbor], pp_graph[pp])
-            #     end
-
-            #     if alltarget
-            #         for ppn in pp_graph[pp]
-            #             println(pp_graph[ppn])
-            #         end
-            #         println([pp; collect(pp_graph[pp])])
-            #         return sum(pp_graph[pp]) + pp
-            #     end
-            # end
+            if !isempty(ncsets)
+                println(ncsets)
+                return minimum(sum, ncsets)
+                # println(ppl," => ", pp_graph[ppl])
+                # return ppl + sum(pp_graph[ppl])
+            end
         end
-        
-        # mapreduce(intersect, pairs(pp_graph)) do (ppl, ppr_set)
-        #     union(Set(opp), ppr_set)
-        # end
     end
 end
 
