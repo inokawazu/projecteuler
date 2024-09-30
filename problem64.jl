@@ -14,9 +14,7 @@ function sqrt_cf_sequence(n::I) where I <: Integer
             # cn/(√n - bn) = cn * (√n + bn)/(n - bn^2)
             mn = n - bn^2
 
-            # @show (an, bn, cn, mn)
             @assert bn >= 0
-            # @assert mn >= 0
             @assert mn % cn == 0
             # cn * (√n + bn)/(n - bn^2) = cn * (√n + bn)/mn = (√n + bn)/dn
             dn = mn ÷ cn
@@ -34,7 +32,7 @@ function sqrt_cf_sequence(n::I) where I <: Integer
                 if res > 0
                     res
                 else
-                    Inf
+                    typemax(I)
                 end
             end
 
@@ -62,30 +60,6 @@ function solution(target = 10_000)
     bound_nums = Iterators.takewhile(<=(target), nums)
     nonsqrs = Iterators.filter(n->isqrt(n)^2 != n, bound_nums)
     return count(isodd∘get_chain_length, nonsqrs)
-    # collect(Iterators.take(sqrt_cf_sequence(23), 10))
-    # collect(Iterators.take(sqrt_cf_sequence(23), 10))
-    
 end
 
 println(solution())
-
-
-# √n
-# k + √n - k
-# k + 1/(1/(√n - k))
-# k + 1/((√n + k)/(n - k^2))
-# k + 1/((√n + k)/(n - k^2))
-#
-# (√n + k)/g = m + 1/(...)
-# (√n + k)/g
-# √n/g + k/g = m + 1/(...)
-#
-# (√n + k - i)/g
-# ℤ ∋ i < k + √n
-# ℤ ∋ ( i - k )^2 < n
-#
-# √n + k - i
-
-
-# k/g + q/g = m
-# k/g - q/g = m
