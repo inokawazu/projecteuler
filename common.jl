@@ -28,6 +28,11 @@ function digs2num(digs::AbstractVector{T}) where T
 end
 
 function continued_fraction_convergents(a::Function, T = Int)
+    as = Iterators.map(a, Iterators.countfrom(zero(T)))
+    return continued_fraction_convergents(as, T)
+end
+
+function continued_fraction_convergents(as, T = Int)
     Channel{Rational{T}}() do c
         pmm1 = one(T)
         pmm2 = zero(T)
@@ -37,9 +42,9 @@ function continued_fraction_convergents(a::Function, T = Int)
 
         pm = zero(T)
         qm = zero(T)
-        for m in Iterators.countfrom(zero(T))
-            pm = a(m) * pmm1 + pmm2
-            qm = a(m) * qmm1 + qmm2
+        for am in as
+            pm = am * pmm1 + pmm2
+            qm = am * qmm1 + qmm2
 
             put!(c, pm//qm)
 
