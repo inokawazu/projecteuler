@@ -56,3 +56,29 @@ function continued_fraction_convergents(as, T = Int)
         end
     end
 end
+
+function totient(n::T) where T <: Integer
+    pro = one(T)
+    maxi = isqrt(n)
+
+    for p in Iterators.countfrom(2one(T))
+        k = zero(T)
+
+        while mod(n, p) == 0
+            n ÷= p
+            k += 1
+        end
+
+        if k > 0
+            pro *= p^(k-1) * (p - 1)
+        elseif isone(n)
+            break
+        elseif p == maxi
+            pro *= (n - 1)
+            n ÷= n
+            break
+        end
+    end
+
+    return pro
+end
