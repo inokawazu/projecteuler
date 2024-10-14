@@ -1,3 +1,5 @@
+# https://en.wikipedia.org/wiki/Partition_function_(number_theory)
+
 function solution(target::T = 1_000_000) where T
     ways = [one(T)]
     for n in Iterators.countfrom(one(T))
