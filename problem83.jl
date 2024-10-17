@@ -21,8 +21,6 @@ function solution(input = get_input())
     best_path_sum = typemax(T)
     best_sums = fill(typemax(T), size(input))
 
-    # println(best_path_sum)
-
     start = CartesianIndex(1, 1)
     finis = CartesianIndex(dim, dim)
     
@@ -34,8 +32,6 @@ function solution(input = get_input())
                  ]
 
     stack = [(start, 1, 0)]
-
-    best_path = []
 
     while !isempty(stack)
         loc, dir_ind, tot = pop!(stack)
@@ -53,9 +49,6 @@ function solution(input = get_input())
 
         if loc == finis
             best_path_sum = ntot
-            empty!(best_path)
-            append!(best_path, stack)
-            # println("Winner:", best_path_sum)
             continue
         end
         
@@ -68,26 +61,15 @@ function solution(input = get_input())
         end
     end
 
-    println(join((Tuple∘first).(best_path), " -> "))
-
-    path_mat = falses(size(input))
-    path_mat[first.(best_path)] .= true
-    foreach(eachrow(path_mat)) do row
-        foreach(row) do elem
-            print(elem ? "." : " ")
-        end
-        println()
-    end
-
     return best_path_sum
 end
 
 const TESTINPUT = [
-             131 673 234 103 18
-             201 96 342 965 150
-             630 803 746 422 111
-             537 699 497 121 956
-             805 732 524 37 331
-            ]
+                   131 673 234 103 18
+                   201 96 342 965 150
+                   630 803 746 422 111
+                   537 699 497 121 956
+                   805 732 524 37 331
+                  ]
 
 println(solution())
