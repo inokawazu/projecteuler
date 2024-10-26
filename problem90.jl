@@ -1,28 +1,23 @@
-
-
-# function isdiepair(die1, die2)
-#     all(SQUARES) do (sq1, sq2)
-#         hasface(die1, sq1) && hasface(die2, sq2) ||
-#         hasface(die1, sq2) && hasface(die2, sq1)
-#     end
-# end
-
-# function hasface(die, n::Integer)
-#     n in die || (n == 6 && 9 in die) || (n == 9 && 6 in die)
-# end
-
-function make_min_dice((die1, die2), (sqr1, sqr2))
-    (
-     (union(die1, sqr1), union(die2, sqr2)),
-     (union(die1, sqr2), union(die2, sqr1)),
-    )
+function snflip(n)
+    if n == 9
+        6
+    elseif n == 6
+        9
+    else
+        n
+    end
 end
 
-function showtrue(x) 
-    if x
-        println(x)
-    end
-    x
+function hasdiceface(die, face)
+    face in die || snflip(face) in die
+end
+
+function ischildof(pair1, pair2)
+    mapreduce(issubset, (x,y) -> x && y, pair1, pair2)
+end
+
+function arerelated(pair1, pair2)
+    ischildof(pair1, pair2) || ischildof(pair2, pair1)
 end
 
 function solution()
@@ -30,109 +25,64 @@ function solution()
         sqr = i^2
         divrem(sqr, 10)
     end
-    # mini_dice = make_minimum_dies()
 
-    mini_dice_pairs = [(Set{Int}(), Set{Int}())]
+    # (die1, die2, level)
+    queue = [
+             (Set{Int}(), Set{Int}(), 0)
+            ]
 
-    for (sqr1, sqr2) in squares
-        next_dice_pairs = empty(mini_dice_pairs)
+    pairs = Tuple{Set{Int}, Set{Int}}[]
 
-        foreach(mini_dice_pairs) do dice_pair
-            append!(next_dice_pairs, make_min_dice(dice_pair, (sqr1, sqr2)))
+    while !isempty(queue)
+        die1, die2, level = popfirst!(queue)
 
-            if sqr1 == 9
-                append!(next_dice_pairs, make_min_dice(dice_pair, (6, sqr2)))
-            elseif sqr1 == 6
-                append!(next_dice_pairs, make_min_dice(dice_pair, (9, sqr2)))
-            end
+        if level == length(squares)
+            # any(pairs) do pair
+            #     ischildof((die1, die2), pair)
+            # end && continue
 
-            if sqr2 == 9
-                append!(next_dice_pairs, make_min_dice(dice_pair, (6, sqr1)))
-            elseif sqr2 == 6
-                append!(next_dice_pairs, make_min_dice(dice_pair, (9, sqr1)))
-            end
+            # child_inds = findall(pairs) do pair
+            #     ischildof(pair, (die1, die2))
+            # end
+            # deleteat!(pairs, child_inds)
+            push!(pairs, (die1, die2))
+
+            continue
         end
 
-        mini_dice_pairs = next_dice_pairs
+        next_level = level + 1
+        (sqr1, sqr2) = squares[next_level]
+        @show squares[next_level]
 
-        # add_min_dice!(next_dice, ())
-        # map(mini_dice) do (die1, die2)
-        #     if !(sqr1 in die1) || !(sqr2 in die2)
-        #         if !(sqr1 in die1) && sqr2 in die2
-        #         elseif sqr1 in die1 && !(sqr2 in die2)
-        #         elseif !(sqr1 in die1) || !(sqr2 in die2)
-        #         else
-        #             @assert false "Unreachable"
-        #         end
-        #     end
-        #     if !(sqr2 in die1) || !(sqr1 in die2)
-        #     end
-        # end
-    end
-
-    filter!(mini_dice_pairs) do dice
-        all(x->length(x) <= 6, dice)
-    end
-
-    mini_dice_pairs = map(mini_dice_pairs) do dice
-        sort.(collect.(dice))
-    end
-
-    reduced_pair_set = empty(mini_dice_pairs)
-    for dice_pair in mini_dice_pairs
-        parent_ind = findfirst(reduced_pair_set) do reduce_pair
-            all(issubset.(dice_pair, reduce_pair))
-        end
-
-        if isnothing(parent_ind)
-            children_inds = findall(reduced_pair_set) do reduce_pair
-                all(issubset.(reduce_pair, dice_pair))
-            end
-            deleteat!(reduced_pair_set, children_inds)
-            push!(reduced_pair_set, dice_pair)
+        # dies = union(die1, die2)
+        if (hasdiceface(die1, sqr1) && hasdiceface(die2, sqr2)) || 
+            (hasdiceface(die1, sqr2) && hasdiceface(die2, sqr1))
+            push!(queue, (die1, die2, next_level))
+        elseif (!hasdiceface(die1, sqr1) && hasdiceface(die2, sqr2)) || 
+            (hasdiceface(die1, sqr2) && !hasdiceface(die2, sqr1))
+            # add sqr1
+            hasdiceface(die2, sqr2) && push!(queue, (union(die1, sqr1), die2, next_level))
+            hasdiceface(die1, sqr2) && push!(queue, (die1, union(die2, sqr1), next_level))
+        elseif (hasdiceface(die1, sqr1) && !hasdiceface(die2, sqr2)) || 
+            (!hasdiceface(die1, sqr2) && hasdiceface(die2, sqr1))
+            # add sqr2
+            hasdiceface(die2, sqr1) && push!(queue, (union(die1, sqr2), die2, next_level))
+            hasdiceface(die1, sqr1) && push!(queue, (die1, union(die2, sqr2), next_level))
+        else 
+            # add sqr2 and sqr1
+            push!(queue, (union(die1, sqr1), union(die2, sqr2), next_level))
+            push!(queue, (union(die1, sqr2), union(die2, sqr1), next_level))
         end
     end
 
-    for i in 1:length(reduced_pair_set)
-        for j in i+1:length(reduced_pair_set)
-            @assert !all(issubset.(reduced_pair_set[i], reduced_pair_set[j]))
-            @assert !all(issubset.(reduced_pair_set[j], reduced_pair_set[i]))
-        end
+    # foreach(println,pairs)
+    # pairs
+
+    sum(pairs, init = 0) do (die1, die2)
+        n69s = count(x->x in (6, 9), die1) + count(x->x in (6, 9), die2)
+        ndigs = sum(length, (die1, die2))
+        2^n69s * binomial(10 + (12 - ndigs) - 1, (12 - ndigs))# 10^(12 - ndigs)
     end
-
-    # foreach(reduced_pair_set) do dice
-    #     println(length.(dice))
-    # end
-
-    sum(reduced_pair_set) do dice
-        10^(12 - sum(length, dice))
-    end
-
-    # unique!(mini_dice_pairs)
-    # foreach(mini_dice_pairs) do pair
-    #     println(pair)
-    # end
-    # nothing
-
-    # SQUARES
-    # # foreach(println, dice_arrangements())
-    # # ndigits(sum(x->1, dice_arrangements())^2)
-    # # twodies = Iterators.product(dice_arrangements(), dice_arrangements())
-    # twodies = ((die1, die2) for die1 in dice_arrangements() for die2 in dice_arrangements())
-
-    # # aretwodies = Iterators.map(x->isdiepair(x...), twodies)
-    # # foreach(println, twodies)
-    # # count()
-    # # foreach(println, twodies)
-    # # count(isdiepair(ds...) for ds in twodies)
-
-    # count(twodies) do x
-    #     res = isdiepair(x...)
-    #     if res
-    #         @show x
-    #     end
-    #     return res
-    # end
 end
 
 println(solution())
