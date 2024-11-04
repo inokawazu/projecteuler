@@ -1,3 +1,5 @@
+# https://www.desmos.com/calculator/hibjvkvspu?lang=ja
+
 # function extended_gcd(a, b)
 function extended_gcd(a::T, b::U) where {T,U}
     V = promote_type(T, U)
