@@ -2,6 +2,18 @@ function concateprod(a, b)
     a * 10^ndigits(b) + b
 end
 
+function idigits(n::T, base = 10) where T <: Integer
+    bs = Iterators.repeated(base)
+    mrs = Iterators.accumulate(bs, init = (n, zero(T))) do (m, _), b
+        divrem(m, b)
+    end
+    Iterators.map(last, Iterators.takewhile(x->any(!iszero, x), mrs))
+end
+
+function revdigits(n::Integer, base = 10)
+    reduce(concateprod, idigits(n, base))
+end
+
 function ispandigital(n, b=9)
     ds = digits(n)
     allunique(ds) && issetequal(ds, 1:b)
@@ -81,4 +93,18 @@ function totient(n::T) where T <: Integer
     end
 
     return pro
+end
+
+function round_robin_inds(find, lind, splits=Threads.nthreads())
+    base_rngs = (find+i:splits:lind for i in 0:(splits-1))
+    group_lind = maximum(last, base_rngs)
+
+    if group_lind == lind
+        base_rngs
+    else
+        Iterators.flatten((
+            base_rngs,
+            (group_lind:find,)
+        ))
+    end
 end
