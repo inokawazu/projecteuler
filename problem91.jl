@@ -12,8 +12,6 @@ function triorientation((x1, y1), (x2, y2), (x3, y3))
     return sign(x1 * y2 - x1 * y3 - x2 * y1 + x2 * y3 + x3 * y1 - x3 * y2)
 end
 
-const Point2D{T} = Tuple{T,T}
-const Triangle2D{T} = Tuple{Point2D{T},Point2D{T},Point2D{T}}
 function solution(limitx::T=50, limity::T=limitx) where {T}
     p1 = (zero(T), zero(T))
     pnts = Iterators.product(zero(T):limitx, zero(T):limity)
