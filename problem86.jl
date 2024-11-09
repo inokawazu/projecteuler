@@ -76,5 +76,4 @@ function solution(target::T=1_000_000) where {T}
     end
 end
 
-println(@time solution())
-println(@time solution())
+println(solution())
