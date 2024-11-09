@@ -1,14 +1,8 @@
-include("common.jl")
-
-
-function solution(target=1_000_000_000)
-    tsks = map(round_robin_inds(1, target)) do rng
-        Threads.@spawn count(rng) do n
-            !iszero(mod(n, 10)) && all(isodd, idigits(revdigits(n) + n))
-        end
+function solution(target=9)
+    sum(1:target) do n
+        (mod(n, 2) == 0 ? 20 * 30^(n ÷ 2 - 1) : zero(target)) +
+        (mod(n, 4) == 3 ? 100 * 500^(n ÷ 4) : zero(target))
     end
-
-    sum(fetch, tsks)
 end
 
-println(@time solution(1_000_000_000))
+println(solution())
