@@ -1,68 +1,26 @@
-function digitsets(target_len=4)
-    return Channel{Vector{Int}}() do ch
-        v = Int[]
-        function f!()
-            if length(v) == target_len
-                put!(ch, copy(v))
-                return nothing
-            end
+function permutations(elems, n)
+    let elems = copy(elems), VT = Vector{eltype(elems)}
+        Channel{VT}() do ch
+            v = VT(undef, n)
 
-            previ = isempty(v) ? -1 : v[end]
-            for i in previ+1:9
-                push!(v, i)
-                f!()
-                pop!(v)
+            function f!(i=1)
+                if i > n # all(!=(NotFilled(), v))
+                    put!(ch, copy(v))
+                    return
+                end
+
+                for elem in setdiff(elems, v[begin:i-1])
+                    v[i] = elem
+                    f!(i + 1)
+                end
             end
-            return nothing
+            f!()
         end
-
-        f!()
-    end
-end
-
-function permutations(noutof)
-    return Channel{Vector{Int}}() do ch
-        v = Int[]
-        function f!()
-            if length(v) == noutof
-                put!(ch, copy(v))
-                return nothing
-            end
-
-            for i in setdiff(1:noutof, v)
-                push!(v, i)
-                f!()
-                pop!(v)
-            end
-            return nothing
-        end
-
-        f!()
-    end
-end
-
-function combinations(choose, noutof)
-    return Channel{Vector{Int}}() do ch
-        v = Int[]
-        function f!()
-            if length(v) == choose
-                put!(ch, copy(v))
-                return nothing
-            end
-
-            for i in 1:noutof
-                push!(v, i)
-                f!()
-                pop!(v)
-            end
-            return nothing
-        end
-
-        f!()
     end
 end
 
 function longest_streak(v)
+    @assert eltype(v) <: Integer
     v = sort(unique(v))
     l = 0
     for (n, elem) in zip(Iterators.countfrom(1), v)
@@ -72,60 +30,39 @@ function longest_streak(v)
             break
         end
     end
-
     return l
 end
 
-function solution(ndigits=4)
-    opcombos = collect(combinations(ndigits - 1, 4))
-    avail_ops = (+, -, *, /)
-    num_orders = collect(permutations(ndigits))
+function solution()
+    digitss = ((a, b, c, d)
+              for a in 0+1:9
+              for b in a+1:9
+              for c in b+1:9
+              for d in c+1:9) |> collect
+    opss = Iterators.product(
+                             [(+), (-), (*), (/)],
+                             [(+), (-), (*), (/)],
+                             [(+), (-), (*), (/)],
+                            ) |> collect
+    oprands_posss = collect(permutations([1,2,3,4], 4))
 
-    maxdigitset = zeros(Rational{Int}, ndigits)
-    maxdigitlen = 0
+    @assert length(digitss) == 126
+    @assert length(opss) == 4^3
 
-    for digitset in digitsets(ndigits)
-        digitset = Rational.(digitset)
-
-        opords = Iterators.product(opcombos, num_orders)
-        pos_nums = Iterators.map(opords) do (opcombo, num_order)
-            out = digitset[num_order[begin]]
-            rest = digitset[num_order[begin+1:end]]
-
-            for (opcode, operand) in zip(opcombo, rest)
-                try
-                    out = (avail_ops[opcode])(out, operand)
-                catch e
-                    # e isa ArgumentError && return 1 // 0
-                    e isa DivideError && return 1 // 0
-                    rethrow()
-                end
-            end
-            out
+    (join∘argmax)(digitss) do digits
+        nums = Iterators.flatmap(Iterators.product(opss, oprands_posss)) do (ops, poss)
+            x = Rational.(digits[poss])
+            (
+             ops[2](ops[1](x[1], x[2]), ops[3](x[3], x[4])),
+             ops[3](ops[2](ops[1](x[1], x[2]), x[3]), x[4])
+            )
         end
 
-        valid_ints = Iterators.filter(isinteger,
-            Iterators.filter(>(0),
-                Iterators.filter(isfinite, pos_nums)))
-
-        run_len = longest_streak(valid_ints)
-        # @show join(Int.(digitset)), run_len
-        # println(sort(unique(valid_ints)))
-        if run_len > maxdigitlen
-            maxdigitlen = run_len
-            maxdigitset = digitset
-        # elseif run_len == maxdigitlen 
-        #     @warn "Found equality" digits=join(Int.(digitset))
-        end
+        pinums = map(Int, Iterators.filter(nums) do n
+            !isnothing(n) && isinteger(n) && n > 0
+        end)
+        longest_streak(pinums)
     end
-    @show maxdigitlen
-    return join(Int.(maxdigitset))
 end
 
 println(solution())
-
-# foreach(println, digitsets())
-# foreach(println, permutations(4))
-# foreach(println, combinations(3, 4))
-# println(reinterpret(reshape, Int, collect(digitsets())))
-# display(stack(digitsets(), dims = 1))
