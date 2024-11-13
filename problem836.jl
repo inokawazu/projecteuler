@@ -1,0 +1,2 @@
+solution() = "aprilfoolsjoke"
+println(solution())
