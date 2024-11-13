@@ -1,84 +1,66 @@
-# https://www.desmos.com/calculator/hibjvkvspu?lang=ja
+# b == number of blue
+# r == number of red
+# P, probability of drawing a blue twice in a row = b/(b + r) * (b-1)/(b + r - 1)
+# t = r + b ≡ total
+# equate P to 1/2 P = 1/2 ⟹   2 * b * (b-1) =  t * (t - 1)
+# ⟹  (1 + sqrt(1 - 2 t + 2 t^2))/2
+# ≡ (1 + d)/2 if t square where t = d^2 
+# or ⟹  2b^2 - 2b = t^2 - t
 
-# function extended_gcd(a, b)
-function extended_gcd(a::T, b::U) where {T,U}
-    V = promote_type(T, U)
-    #
-    (old_r, r) = (V(a), V(b))
-    (old_s, s) = (one(V), zero(V))
-    (old_t, t) = (zero(V), one(V))
+# issqr(n) = isqrt(n)^2 == n
 
-    #     while r ≠ 0 do
-    while !iszero(r)
-        # #
-        quotient = old_r ÷ r
-        #         (old_r, r) := (r, old_r − quotient × r)
-        #         (old_s, s) := (s, old_s − quotient × s)
-        #         (old_t, t) := (t, old_t − quotient × t)
-        (old_r, r) = (r, old_r − quotient * r)
-        (old_s, s) = (s, old_s − quotient * s)
-        (old_t, t) = (t, old_t − quotient * t)
+function hasb(t::Integer)
+    dsqr = 1 - 2 * t + 2 * t^2
+    d = isqrt(dsqr)
+    d^2 == dsqr && isodd(d)
+end
+
+function getb(t::Integer)
+    (1 + isqrt(1 - 2 * t + 2 * t^2)) ÷ 2
+end
+
+function toprime(tb)
+    @. 2 * tb - 1
+end
+
+function fromprime(tbp)
+    @. div(tbp + 1, 2)
+end
+
+function qformp((tp, bp))
+    # bp / 2 + 1 / 2 == b
+    # (tp / 2 + 1 / 2) * (tp / 2 - 1 / 2) - 2(bp / 2 + 1 / 2) * (bp / 2 - 1 / 2) == 0
+    # tp^2 - 2bp^2 == -1
+    # x^2 - ny^2 == -1
+    tp^2 - 2bp^2 + 1
+end
+
+function nextbpsol((xk, yk), (x1, y1); n=2)
+    # x^2 - ny^2 == - 1
+    xkp2 = xk * x1^2 + n * xk * y1^2 + 2n * yk * y1 * x1
+    ykp2 = yk * x1^2 + n * yk * y1^2 + 2xk * y1 * x1
+    return xkp2, ykp2
+end
+
+function solution(target=big(10)^12)
+    ts = Iterators.filter(hasb, Iterators.countfrom(one(target)))
+
+    t = first(ts)
+    b = getb(t)
+
+    tbp1 = tbp = toprime((t, b))
+
+    # @show tbp1
+    # @assert iszero(qformp(tbp))
+
+    while !(all(isodd, tbp) && fromprime(tbp[1]) > target)
+        tbp = nextbpsol(tbp, tbp1)
+        # @show tbp, fromprime(tbp)
+        @assert iszero(qformp(tbp))
     end
 
-    #     output "Bézout coefficients:", (old_s, old_t)
-    #     output "greatest common divisor:", old_r
-    #     output "quotients by the gcd:", (t, s)
-    (
-        bezout_coefs=(old_s, old_t),
-        gcd=old_r,
-        gcd_quotients=(t, s),
-    )
-end
+    return last(fromprime(tbp))
 
-function isgooddisks(x, y)
-    x * (x - 1) == (x + y) * (x + y - 1) ÷ 2
-end
-
-function isgooderr(x, y)
-    x * (x - 1) - (x + y) * (x + y - 1) ÷ 2
-end
-
-
-# 1 / 2 - x - Sqrt[1 - 8 x + 8 x ^ 2] / 2
-# 1 / 2 - x + sqrt(2) x
-# 1 / 2 + x (sqrt(2) - 1)
-# y = 1 / 2 + x n/d
-# 2y = 1 + x 2n/d
-# 2dy = d + x 2n
-# 2dy - 2nx = d
-function solution(min=big"10"^12)
-    setprecision(100, base=100) do
-
-        seed = (sqrt(big"2") - 1)
-
-        for pre in 2:30
-            r = rationalize(seed, tol=10.0^(-pre))
-
-            ndis = 0
-            for n in numerator(r)-ndis:numerator(r)+ndis
-                for d in denominator(r)-ndis:denominator(r)+ndis
-                    a, b = -2n, 2d
-                    cd = abs(gcd(a, b))
-                    if mod(d, cd) == 0
-                        x, y = extended_gcd(a, b).bezout_coefs
-                        @assert a < 0
-
-                        while y < 0 || x < 0
-                            x, y = x + b ÷ cd, y - a ÷ cd
-                        end
-
-                        @show x, y
-
-                        if x + y > min && isgooddisks(x, y)
-                            return x
-                        elseif y + x > min
-                            @show isgooderr(x, y), isgooderr(y, x)
-                        end
-                    end
-                end
-            end
-        end
-    end
 end
 
 println(solution())
