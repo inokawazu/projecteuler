@@ -7,8 +7,6 @@
 # ≡ (1 + d)/2 if t square where t = d^2 
 # or ⟹  2b^2 - 2b = t^2 - t
 
-# issqr(n) = isqrt(n)^2 == n
-
 function hasb(t::Integer)
     dsqr = 1 - 2 * t + 2 * t^2
     d = isqrt(dsqr)
@@ -50,13 +48,9 @@ function solution(target=big(10)^12)
 
     tbp1 = tbp = toprime((t, b))
 
-    # @show tbp1
-    # @assert iszero(qformp(tbp))
-
     while !(all(isodd, tbp) && fromprime(tbp[1]) > target)
         tbp = nextbpsol(tbp, tbp1)
-        # @show tbp, fromprime(tbp)
-        @assert iszero(qformp(tbp))
+        # @assert iszero(qformp(tbp))
     end
 
     return last(fromprime(tbp))
