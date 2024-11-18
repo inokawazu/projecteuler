@@ -52,8 +52,7 @@ function check_rules(set)
 end
 
 function solution(input=get_intput())
-    tsks = map(x -> Threads.@spawn(check_rules(x)), input)
-    sum(sum ∘ fetch, input[fetch.(tsks)])
+    sum(sum, filter(check_rules, input))
 end
 
 println(solution())
