@@ -94,17 +94,3 @@ function totient(n::T) where T <: Integer
 
     return pro
 end
-
-function round_robin_inds(find, lind, splits=Threads.nthreads())
-    base_rngs = (find+i:splits:lind for i in 0:(splits-1))
-    group_lind = maximum(last, base_rngs)
-
-    if group_lind == lind
-        base_rngs
-    else
-        Iterators.flatten((
-            base_rngs,
-            (group_lind:find,)
-        ))
-    end
-end
