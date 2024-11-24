@@ -17,15 +17,6 @@ function get_input(url="https://projecteuler.net/resources/documents/0107_networ
     end |> stack
 end
 
-# A	B	C	D	E	F	G
-# A	-	16	12	21	-	-	-
-# B	16	-	-	17	20	-	-
-# C	12	-	-	28	-	31	-
-# D	21	17	28	-	18	19	23
-# E	-	20	-	18	-	-	11
-# F	-	-	31	19	-	-	27
-# G	-	-	-	23	11	27	-
-
 const TEST_INPUT = [
     0 16 12 21 0 0 0
     16 0 0 17 20 0 0
@@ -36,91 +27,56 @@ const TEST_INPUT = [
     0 0 0 23 11 27 0
 ]
 
-@inline function cost(network)
-    return sum(network) ÷ 2
+function find_parent!(parent, i)
+    if parent[i] != i
+        parent[i] = find_parent!(parent, parent[i])
+    end
+    return parent[i]
 end
 
-@inline function remcost(network::AbstractMatrix{T}, ijs) where {T}
-    sum(ijs; init=zero(T)) do (i, j)
-        canremove(network, (i, j)) * network[i, j]
+function union_parent!(parent, rank, x, y)
+    if rank[x] < rank[y]
+        parent[x] = y
+    elseif rank[x] > rank[y]
+        parent[y] = x
+    else
+        parent[y] = x
+        rank[x] += 1
     end
 end
 
-@inline function canremove(network, (ir, jr))
-    visited = falses(size(network, 1))
-    queue = Int[jr]
-    while !isempty(queue)
-        j = popfirst!(queue)
-        visited[j] = true
-        for i in axes(network, 1)
-            if !visited[i] && (i, j) != (ir, jr) && (i, j) != (jr, ir) &&
-               !(iszero(network[i, j])) && !(i in queue)
-                push!(queue, i)
-            end
-        end
-    end
+function solution(networkmat::AbstractMatrix{T}=get_input()) where {T}
+    result = Tuple{Int,Int,T}[]
+    i = 1
+    e = 0
+    nverts = size(networkmat, 1)
+    @assert allequal(size(networkmat))
 
-    return all(visited)
-end
-
-function solution(networkmat=get_input())
-    initial_cost = cost(networkmat)
-    best_cost = initial_cost
-
-    trimmed_network = copy(networkmat)
-
-    tovisit = [
-        (i, j)
-        for i in axes(trimmed_network, 1)
-        for j in i+1:size(trimmed_network, 2)
-        if !iszero(trimmed_network[i, j])
+    graph = [
+        (i, j, networkmat[i, j])
+        for i in axes(networkmat, 1) for j in i+1:nverts
+        if !iszero(networkmat[i, j])
     ]
-    sort!(tovisit, by=I -> trimmed_network[I...], rev=true)
+    sort!(graph, by=last)
 
-    stack = [(1, :start)]
-    while !isempty(stack)
-        ij_ind, state = pop!(stack)
-        i, j = tovisit[ij_ind]
+    parent = collect(1:nverts)
+    rank = zeros(Int, nverts)
 
-        if state == :start
-            if canremove(trimmed_network, (i, j))
-                trimmed_network[j, i] = trimmed_network[i, j] = 0
-                state = :remove
-            else
-                state = :ignore
-            end
-        elseif state == :remove
-            trimmed_network[j, i] = trimmed_network[i, j] = networkmat[i, j]
-            state = :ignore
-        elseif state == :ignore
-            state = :end
-        else
-            error("unreachable")
-        end
+    while e + 1 < nverts
 
-        if cost(trimmed_network) < best_cost
-            best_savings = initial_cost - cost(trimmed_network)
-            @info "Found better cost!" best_savings = best_savings best_cost = cost(trimmed_network)
-            best_cost = cost(trimmed_network)
-        end
+        u, v, w = graph[i]
+        i = i + 1
+        x = find_parent!(parent, u)
+        y = find_parent!(parent, v)
 
-        if state != :end
-            push!(stack, (ij_ind, state))
-        end
-
-        rcost = remcost(trimmed_network, @view(tovisit[ij_ind+1:end]))
-        if cost(trimmed_network) >= best_cost + rcost
-            continue
-        end
-
-        if ij_ind < length(tovisit)
-            push!(stack, (ij_ind + 1, :start))
+        if x != y
+            e += 1
+            push!(result, (u, v, w))
+            union_parent!(parent, rank, x, y)
         end
     end
 
-    return initial_cost - best_cost
+    return sum(last, result)
 end
 
-
-# println(solution(TEST_INPUT))
 println(solution())
