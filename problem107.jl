@@ -83,14 +83,14 @@ function solution(networkmat=get_input())
         # sleep(0.1)
 
         if state == :start
-            state = :ignore
-        elseif state == :ignore
             if canremove(trimmed_network, (i, j))
                 trimmed_network[j, i] = trimmed_network[i, j] = 0
                 state = :remove
             else
                 state = :end
             end
+        elseif state == :ignore
+            state = :ignore
         elseif state == :remove
             trimmed_network[j, i] = trimmed_network[i, j] = networkmat[i, j]
             state = :end
@@ -124,6 +124,4 @@ end
 
 
 # println(solution(TEST_INPUT))
-# @show canremove(TEST_INPUT, (3, 4))
-
 println(solution())
