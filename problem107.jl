@@ -40,14 +40,10 @@ const TEST_INPUT = [
     return sum(network) ÷ 2
 end
 
-@inline function remcost(network::AbstractMatrix{T}, (i, j)) where {T}
-    sum(
-        (network[i, js] for js in i+1:size(network, 2));
-        init=zero(T)
-    ) + sum(
-        network[is, js] for is in i+1:size(network, 1) for js in i+2:size(network, 2);
-        init=zero(T)
-    )
+@inline function remcost(network::AbstractMatrix{T}, ijs) where {T}
+    sum(ijs; init=zero(T)) do (i, j)
+        canremove(network, (i, j)) * network[i, j]
+    end
 end
 
 @inline function canremove(network, (ir, jr))
@@ -73,26 +69,30 @@ function solution(networkmat=get_input())
 
     trimmed_network = copy(networkmat)
 
-    stack = [(1, 2, :start)]
-    while !isempty(stack)
-        i, j, state = pop!(stack)
+    tovisit = [
+        (i, j)
+        for i in axes(trimmed_network, 1)
+        for j in i+1:size(trimmed_network, 2)
+        if !iszero(trimmed_network[i, j])
+    ]
+    sort!(tovisit, by=I -> trimmed_network[I...], rev=true)
 
-        # display(trimmed_network)
-        # display(stack)
-        # @show i, j, state
-        # sleep(0.1)
+    stack = [(1, :start)]
+    while !isempty(stack)
+        ij_ind, state = pop!(stack)
+        i, j = tovisit[ij_ind]
 
         if state == :start
             if canremove(trimmed_network, (i, j))
                 trimmed_network[j, i] = trimmed_network[i, j] = 0
                 state = :remove
             else
-                state = :end
+                state = :ignore
             end
-        elseif state == :ignore
-            state = :ignore
         elseif state == :remove
             trimmed_network[j, i] = trimmed_network[i, j] = networkmat[i, j]
+            state = :ignore
+        elseif state == :ignore
             state = :end
         else
             error("unreachable")
@@ -105,17 +105,16 @@ function solution(networkmat=get_input())
         end
 
         if state != :end
-            push!(stack, (i, j, state))
+            push!(stack, (ij_ind, state))
         end
 
-        if cost(trimmed_network) >= best_cost + remcost(trimmed_network, (i, j))
+        rcost = remcost(trimmed_network, @view(tovisit[ij_ind+1:end]))
+        if cost(trimmed_network) >= best_cost + rcost
             continue
         end
 
-        if j < size(trimmed_network, 2)
-            push!(stack, (i, j + 1, :start))
-        elseif i + 1 < size(trimmed_network, 1)
-            push!(stack, (i + 1, i + 2, :start))
+        if ij_ind < length(tovisit)
+            push!(stack, (ij_ind + 1, :start))
         end
     end
 
