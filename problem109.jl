@@ -7,14 +7,10 @@ const POSITIONS = [
              (:s, 0)
             ]
 
-mult(sym) = if sym == :s
-    1
-elseif sym == :d
-    2
-elseif sym == :t
-    3
-else
-    0
+mult(sym) = if sym == :s 1
+elseif sym == :d 2
+elseif sym == :t 3
+else 0
 end
 
 score((sym, num)) = mult(sym) * num
