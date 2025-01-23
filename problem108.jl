@@ -1,26 +1,27 @@
-function solution(mincount = 1000)
-    nums = Iterators.countfrom()
-    for n in nums
-        ncnt = 0
-        for x in Iterators.countfrom(n + 1)
-            for y in Iterators.countfrom(fld(n*x, x - n))
-                if x * y  > n * (x + y)
-                    break
-                elseif x * y == n * (x + y)
-                    ncnt += 1
-                    break
-                end
+include("common.jl")
+
+function count_sols(n)
+    nsols = 1 
+
+    for i in 2:isqrt(n)
+        if mod(n, i) == 0
+            ai = 0
+            while mod(n, i) == 0
+                ai += 1
+                n ÷= i
             end
-            if x * x  > n * (x + x)
-                break
-            end
-        end
-        if ncnt > mincount
-            return n
+            nsols *= 2ai + 1
         end
     end
 
-    return -1
+    return (nsols + 1) ÷ 2
+end
+
+function solution(mincount = 1000)
+    for n in Iterators.countfrom(mincount)
+        if count_sols(n) > mincount return n end
+    end
+    return -one(mincount)
 end
 
 println(solution())
