@@ -23,4 +23,4 @@ function solution(mincount = 1000)
     return -1
 end
 
-solution()
+println(solution())
