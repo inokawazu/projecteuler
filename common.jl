@@ -3,11 +3,8 @@ function concateprod(a, b)
 end
 
 function idigits(n::T, base = 10) where T <: Integer
-    bs = Iterators.repeated(base)
-    mrs = Iterators.accumulate(bs, init = (n, zero(T))) do (m, _), b
-        divrem(m, b)
-    end
-    Iterators.map(last, Iterators.takewhile(x->any(!iszero, x), mrs))
+    nthdigit(n, nth) = n ÷ 10^(nth - 1) % 10
+    Iterators.map(nth -> nthdigit(n, nth), 1:ndigits(n))
 end
 
 function revidigits(n)
