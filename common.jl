@@ -10,6 +10,11 @@ function idigits(n::T, base = 10) where T <: Integer
     Iterators.map(last, Iterators.takewhile(x->any(!iszero, x), mrs))
 end
 
+function revidigits(n)
+    nthdigit(n, nth) = n ÷ 10^(nth - 1) % 10
+    Iterators.map(nth -> nthdigit(n, nth), ndigits(n):-1:1)
+end
+
 function revdigits(n::Integer, base = 10)
     reduce(concateprod, idigits(n, base))
 end
