@@ -21,8 +21,8 @@ end
 
 function isabc(a, b, c, radc)
     a < b < c && a + b == c && 
-    1 == gcd(a, b) == gcd(b, c) == gcd(c, a) && 
-    rad(a) * rad(b) * radc < c
+    1 == gcd(a, b) && rad(a) * rad(b) * radc < c
+    # 1 == gcd(a, b) == gcd(b, c) == gcd(c, a) && 
 end
 
 function coprimepairs(limit::T) where T
@@ -54,4 +54,5 @@ function solution(cmax::T) where T
     sum(fetch, ctsks)
 end
 
+# 18407904
 println(solution(120_000))
