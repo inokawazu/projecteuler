@@ -2,18 +2,10 @@ function concateprod(a, b)
     a * 10^ndigits(b) + b
 end
 
-function idigits(n::T, base = 10) where T <: Integer
-    nthdigit(n, nth) = n ÷ 10^(nth - 1) % 10
-    Iterators.map(nth -> nthdigit(n, nth), 1:ndigits(n))
-end
+nthdigit(n, nth; base = 10) = n ÷ base^(nth - 1) % base
 
-function revidigits(n)
-    nthdigit(n, nth) = n ÷ 10^(nth - 1) % 10
-    Iterators.map(nth -> nthdigit(n, nth), ndigits(n):-1:1)
-end
-
-function revdigits(n::Integer, base = 10)
-    reduce(concateprod, idigits(n, base))
+function idigits(n::Integer; base = 10)
+    Iterators.map(nth -> nthdigit(n, nth, base = base), 1:ndigits(n, base = base))
 end
 
 function ispandigital(n, b=9)
