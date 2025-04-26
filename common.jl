@@ -33,6 +33,8 @@ function digs2num(digs::AbstractVector{T}) where T
     end
 end
 
+rrpartitions(x, n) = (x[i:n:length(x)] for i in 1:n)
+
 function continued_fraction_convergents(a::Function, T = Int)
     as = Iterators.map(a, Iterators.countfrom(zero(T)))
     return continued_fraction_convergents(as, T)
