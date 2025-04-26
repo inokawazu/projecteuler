@@ -1,7 +1,5 @@
 include("common.jl")
 
-# idigits(n::T)
-
 function isincreasing(n)
     ds = idigits(n)
     0 <= n < 10 || all(zip(ds, Iterators.drop(ds, 1))) do (d1, d2)
