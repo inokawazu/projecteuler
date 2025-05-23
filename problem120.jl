@@ -1,9 +1,6 @@
 function solution(target)
     sum(3:target) do a
-        rs = Iterators.map(1:a^2) do n
-            2 * binomial(n, n % 2) * a^isodd(n) % a^2
-        end
-        maximum(rs)
+        a*((a-1)÷2)*2
     end
 end
 
