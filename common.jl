@@ -90,3 +90,24 @@ function totient(n::T) where T <: Integer
 
     return pro
 end
+
+function combinations(elems, n)
+    let elems = copy(elems), VT = Vector{eltype(elems)}
+        Channel{VT}() do ch
+            v = VT(undef, n)
+
+            function f!(i=1, j=0)
+                if i > n
+                    put!(ch, copy(v))
+                    return
+                end
+
+                for j_next in j+1:length(elems)
+                    v[i] = elems[j_next]
+                    f!(i + 1, j_next)
+                end
+            end
+            f!()
+        end
+    end
+end
