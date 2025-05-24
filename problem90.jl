@@ -5,27 +5,6 @@ const SQUARES = map(1:9) do i
     divrem(sqr, 10)
 end
 
-function combinations(elems, n)
-    let elems = copy(elems), VT = Vector{eltype(elems)}
-        Channel{VT}() do ch
-            v = VT(undef, n)
-
-            function f!(i=1, j=0)
-                if i > n # all(!=(NotFilled(), v))
-                    put!(ch, copy(v))
-                    return
-                end
-
-                for j_next in j+1:length(elems)
-                    v[i] = elems[j_next]
-                    f!(i + 1, j_next)
-                end
-            end
-            f!()
-        end
-    end
-end
-
 function snflip(n::T)::T where T
     # n * (n != 6) * (n != 9) + 9 * (n == 6) + 6 * (n == 9)
     if n == 6

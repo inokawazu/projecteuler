@@ -4,6 +4,8 @@
 # All two numbers must must be greater than all one numbers
 # Etc for three to two and onwards
 
+include("common.jl")
+
 function subsets(elems, m, n)
     @assert n >= m
     let elems = copy(elems), VT = Vector{eltype(elems)}
@@ -16,27 +18,6 @@ function subsets(elems, m, n)
                     return
                 elseif i > m
                     put!(ch, v[1:i-1])
-                end
-
-                for j_next in j+1:length(elems)
-                    v[i] = elems[j_next]
-                    f!(i + 1, j_next)
-                end
-            end
-            f!()
-        end
-    end
-end
-
-function combinations(elems, n)
-    let elems = copy(elems), VT = Vector{eltype(elems)}
-        Channel{VT}() do ch
-            v = VT(undef, n)
-
-            function f!(i=1, j=0)
-                if i > n
-                    put!(ch, copy(v))
-                    return
                 end
 
                 for j_next in j+1:length(elems)
